@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop Inventory</title>
+</head>
+<body>
+    <h1>Shop Inventory</h1>
+    <form onsubmit="handleFormSubmit(event)">
+        <label for="item">Item Name</label>
+        <input type="text" id="item" name="item" required />
+        
+        <label for="description">Description</label>
+        <input type="text" id="description" name="description" required />
+        
+        <label for="price">Price</label>
+        <input type="number" id="price" name="price" required />
+        
+        <label for="quantity">Quantity</label>
+        <input type="number" id="quantity" name="quantity" required />
+        
+        <button type="submit">Add Item</button>
+    </form>
+    <ul></ul>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.1/axios.min.js"></script>
+    
+    <script>
+        let currentitemId = null;
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const shopDetails = {
+                item: event.target.item.value,
+                price: event.target.price.value,
+                description: event.target.description.value,
+                quantity: event.target.quantity.value,
+            };
+
+            axios.post("http://localhost:3000/items/add-items", shopDetails)
+                .then((response) => {
+                    const itemlist = document.querySelector("ul");
+                    itemlist.innerHTML = "";
+                    response.data.forEach(item => displayItemsOnScreen(item));
+                })
+                .catch((error) => console.log(error));
+
+            // Clear the form fields
+            document.getElementById("item").value = "";
+            document.getElementById("price").value = "";
+            document.getElementById("quantity").value = "";
+            document.getElementById("description").value = "";
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            axios.get("http://localhost:3000/items/get-items")
+                .then((response) => {
+                    response.data.forEach(item => displayItemsOnScreen(item));
+                })
+                .catch((error) => console.log(error));
+        });
+
+        function displayItemsOnScreen(shopDetails) {
+            const shopItem = document.createElement("li");
+            shopItem.appendChild(
+                document.createTextNode(`${shopDetails.item} - ${shopDetails.quantity} - ${shopDetails.description} -${shopDetails.price}`)
+            );
+
+            const buy1btn = document.createElement("button");
+            buy1btn.appendChild(document.createTextNode("Buy 1"));
+            buy1btn.addEventListener("click", ()=> upDateQuantity(shopDetails.id,1));
+            shopItem.appendChild(buy1btn);
+
+            const buy2btn = document.createElement("button");
+            buy2btn.appendChild(document.createTextNode("Buy 2"));
+            buy2btn.addEventListener("click", () => upDateQuantity(shopDetails.id,2));
+            shopItem.appendChild(buy2btn);
+
+            const buy3btn = document.createElement("button");
+            buy3btn.appendChild(document.createTextNode("Buy 3"));
+            buy3btn.addEventListener("click", () => upDateQuantity(shopDetails.id,3));
+            shopItem.appendChild(buy3btn);
+
+            const itemList = document.querySelector("ul");
+            itemList.appendChild(shopItem);
+        }
+        function upDateQuantity(itemId, quantityToBuy) { 
+    axios.put(`http://localhost:3000/items/update-quantity/${itemId}`, { quantityToBuy })
+        .then((response) => {
+            document.querySelector("ul").innerHTML = ""; 
+            response.data.forEach(item => displayItemsOnScreen(item)); 
+        })
+        .catch((error) => console.log(error));
+}
+
+
+
+        
+    </script>
+</body>
+</html>
